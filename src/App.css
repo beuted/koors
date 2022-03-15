@@ -111,8 +111,11 @@
 }
 
 .itemName {
-  width: 200px;
   text-align: left;
+}
+
+.itemChecked {
+
 }
 
 .itemQuantityControls {

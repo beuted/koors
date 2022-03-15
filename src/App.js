@@ -97,7 +97,7 @@ function App() {
       if (item[1].count > 0)
         text += item[0] + " x" + item[1].count + "\n"
     };
-    navigator.clipboard.writeText(text);
+    return copyToClipboardPrivate(text);
   }
 
   function reset() {
@@ -105,10 +105,11 @@ function App() {
   }
 
   function exportToGKeep() {
-    copyToClipBoard();
-    setTimeout(() => {
-      window.open("http://keep.new");
-    }, 500)
+    copyToClipBoard().then(() => {
+      setTimeout(() => {
+        window.open("http://keep.new");
+      }, 500)
+    });
   }
 
   function getCategoryEmoji(itemKey) {
@@ -132,6 +133,31 @@ function App() {
     var newItems = Object.assign({}, items);
     newItems[itemKey].checked = !newItems[itemKey].checked;
     setItems(newItems);
+  }
+
+  // return a promise
+  function copyToClipboardPrivate(textToCopy) {
+    // navigator clipboard api needs a secure context (https)
+    if (navigator.clipboard && window.isSecureContext) {
+      // navigator clipboard api method'
+      return navigator.clipboard.writeText(textToCopy);
+    } else {
+      // text area method
+      let textArea = document.createElement("textarea");
+      textArea.value = textToCopy;
+      // make the textarea out of viewport
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      return new Promise((res, rej) => {
+        // here the magic happens
+        document.execCommand('copy') ? res() : rej();
+        textArea.remove();
+      });
+    }
   }
 
 
