@@ -12,6 +12,25 @@ function App() {
 
 
   useEffect(() => {
+    var items;
+    try {
+      var items = JSON.parse(localStorage.getItem('koors-items'));
+      console.log("read local storage", items);
+
+    } catch (err) {
+      console.log(err);
+      localStorage.removeItem('koors-items');
+      return;
+    }
+    if (items)
+      setItems(items);
+  }, [])
+
+  useEffect(() => {
+    if (items) {
+      console.log("update local storage");
+      localStorage.setItem('koors-items', JSON.stringify(items));
+    }
     var itemKeys = Object.keys(items);
     itemKeys.sort((i1, i2) => categoryMap[i1] < categoryMap[i2] ? 1 : -1)
     setOrderedItems(itemKeys)
@@ -34,26 +53,28 @@ function App() {
 
     for (var item of Object.entries(recette.ingredients)) {
       if (!newItems[item[0]])
-        newItems[item[0]] = item[1];
+        newItems[item[0]] = { count: item[1], checked: false };
       else
-        newItems[item[0]] += item[1];
+        newItems[item[0]].count += item[1];
     }
 
     setItems(newItems);
   }
 
-  function decreaseItem(itemName) {
+  function decreaseItem(itemName, evt) {
     var newItems = Object.assign({}, items);
-    if (newItems[itemName] == 0)
+    if (newItems[itemName].count == 0)
       return;
-    newItems[itemName]--;
+    newItems[itemName].count--;
     setItems(newItems);
+    evt.stopPropagation();
   }
 
-  function increaseItem(itemName) {
+  function increaseItem(itemName, evt) {
     var newItems = Object.assign({}, items);
-    newItems[itemName]++;
+    newItems[itemName].count++;
     setItems(newItems);
+    evt.stopPropagation();
   }
 
   function createNewItem() {
@@ -62,9 +83,9 @@ function App() {
 
     var newItems = Object.assign({}, items);
     if (!newItems[nameNewItem])
-      newItems[nameNewItem] = 1;
+      newItems[nameNewItem] = { count: 1, checked: false };
     else
-      newItems[nameNewItem] += 1;
+      newItems[nameNewItem].count += 1;
 
     setItems(newItems);
     setNameNewItem("");
@@ -73,8 +94,8 @@ function App() {
   function copyToClipBoard() {
     var text = "";
     for (var item of Object.entries(items)) {
-      if (item[1] > 0)
-        text += item[0] + " x" + item[1] + "\n"
+      if (item[1].count > 0)
+        text += item[0] + " x" + item[1].count + "\n"
     };
     navigator.clipboard.writeText(text);
   }
@@ -107,6 +128,12 @@ function App() {
     setItemsToValide(newItemsToValide);
   }
 
+  function checkItem(itemKey) {
+    var newItems = Object.assign({}, items);
+    newItems[itemKey].checked = !newItems[itemKey].checked;
+    setItems(newItems);
+  }
+
 
   return (
     <div className="App">
@@ -130,12 +157,14 @@ function App() {
           Courses
         </div>
         <div className="list">
-          {orderedItems.map((itemKey, i) => <div key={i} className={"item " + (items[itemKey] <= 0 ? "noItem" : "")}>
-            <div className="itemName">{getCategoryEmoji(itemKey)} {itemKey}</div>
+          {orderedItems.map((itemKey, i) => <div key={i} className={"item " + ((!items[itemKey] || items[itemKey].count <= 0 || items[itemKey].checked) ? "noItem" : "")} onClick={() => checkItem(itemKey)}>
+            <div className="itemName">
+              <input type="checkbox" readOnly checked={items[itemKey].checked} />{getCategoryEmoji(itemKey)} {itemKey}
+            </div>
             <div className="itemQuantityControls">
-              <div className={"itemButton " + (items[itemKey] <= 0 ? "noItem" : "")} onClick={() => decreaseItem(itemKey)}>⬅</div>
-              <div className="itemQuantity">{items[itemKey]}</div>
-              <div className="itemButton" onClick={() => increaseItem(itemKey)}>➡</div>
+              <div className={"itemButton " + ((!items[itemKey] || items[itemKey].count <= 0) ? "noItem" : "")} onClick={(evt) => decreaseItem(itemKey, evt)}>⬅</div>
+              <div className="itemQuantity">{items[itemKey] ? items[itemKey].count : 0}</div>
+              <div className="itemButton" onClick={(evt) => increaseItem(itemKey, evt)}>➡</div>
             </div>
           </div>)}
 
@@ -146,9 +175,9 @@ function App() {
         </div>
 
         <div className="actions">
-          <button className="actionButton" onClick={() => reset()}>reset</button>
-          <button className="actionButton" onClick={() => copyToClipBoard()}>copy</button>
-          <button className="actionButton" onClick={() => exportToGKeep()}>export to google keep</button>
+          <button className="actionButton" onClick={() => reset()}>🗑️ reset</button>
+          <button className="actionButton" onClick={() => copyToClipBoard()}>📋 copy</button>
+          <button className="actionButton" onClick={() => exportToGKeep()}>📝 google keep</button>
         </div>
       </div>
       {showModal ? <div className="modal-container" onClick={(event) => event.stopPropagation()}>
