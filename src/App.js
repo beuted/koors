@@ -159,7 +159,7 @@ function App() {
         <div className="list">
           {orderedItems.map((itemKey, i) => <div key={i} className={"item " + ((!items[itemKey] || items[itemKey].count <= 0 || items[itemKey].checked) ? "noItem" : "")} onClick={() => checkItem(itemKey)}>
             <div className="itemName">
-              <input type="checkbox" readOnly checked={items[itemKey].checked} />{getCategoryEmoji(itemKey)} {itemKey}
+              <input type="checkbox" readOnly checked={items[itemKey] && items[itemKey].checked} />{getCategoryEmoji(itemKey)} {itemKey}
             </div>
             <div className="itemQuantityControls">
               <div className={"itemButton " + ((!items[itemKey] || items[itemKey].count <= 0) ? "noItem" : "")} onClick={(evt) => decreaseItem(itemKey, evt)}>⬅</div>
