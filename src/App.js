@@ -32,7 +32,7 @@ function App() {
       localStorage.setItem('koors-items', JSON.stringify(items));
     }
     var itemKeys = Object.keys(items);
-    itemKeys.sort((i1, i2) => categoryMap[i1] < categoryMap[i2] ? 1 : -1)
+    itemKeys.sort((i1, i2) => categoryMap[i1] < categoryMap[i2] ? 1 : -1);
     setOrderedItems(itemKeys)
   }, [items])
 
@@ -49,7 +49,8 @@ function App() {
 
     let recette = recettes.find(x => x.name === recetteName);
 
-    setItemsToValide(Object.keys(recette.ingredients).filter(x => ingredientsToValidate.includes(x)));
+    if (!recette.singleItem) // If this is a single item recette don't validate
+      setItemsToValide(Object.keys(recette.ingredients).filter(x => ingredientsToValidate.includes(x)));
 
     for (var item of Object.entries(recette.ingredients)) {
       if (!newItems[item[0]])
@@ -172,7 +173,7 @@ function App() {
           Recettes
         </div>
         <div className="recettes">
-          {recettes.map((recette, i) => <div key={i} className={"recette" + (recette.singleItem ? " singleItem" : "")} onClick={() => addItems(recette.name)}>
+          {recettes.map((recette, i) => <div key={i} className={"recette" + (recette.singleItem ? " singleItem" : "") + (recette.type == 'dessert' ? " dessert" : "") + (recette.type == 'flemme' ? " flemme" : "")} onClick={() => addItems(recette.name)}>
             <div className="recette-title">{recette.name}</div>
             <div className="recette-nb-personnes">{recette.personnes ? recette.personnes + "🙋‍♂️" : ""}</div>
             <div className="recette-link">{recette.link ? (<a href={recette.link} target="_blank" onClick={(event) => event.stopPropagation()}>🔗</a>) : null}</div>

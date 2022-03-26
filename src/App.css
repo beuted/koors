@@ -84,7 +84,16 @@
 }
 
 .singleItem {
+  background-color: #cbf0f8;
+}
+
+.dessert {
   background-color: #feefc3;
+}
+
+
+.flemme {
+  background-color: #fdd5c3;
 }
 
 .recette-title {
