@@ -147,6 +147,14 @@ let recettes = [{
   personnes: 4
 },
 {
+  name: "Curry patate douce lentilles",
+  personnes: 4,
+  ingredients: {
+    //TODO
+  },
+  link: "https://dekajoo.notion.site/Curry-de-patate-douce-e8a2fee688b14c07b8f1d8eff98a201c"
+},            
+{
   name: "Salade de lentille",
   ingredients: {
     "lentille": 1,
@@ -297,11 +305,47 @@ let recettes = [{
   personnes: 4
 },
 {
-  name: "Brusquetta",
+  name: "Bruschetta",
   ingredients: {
-
+ //TODO
   },
   personnes: 4
+},
+{
+  name: "Fajitas",
+  ingredients: {
+ //TODO
+  },
+  personnes: 4
+},
+{
+  name: "Enchiladas végé",
+  ingredients: {
+ //TODO
+  },
+  personnes: 4
+},
+{
+  name: "Flammekueche",
+  ingredients: {
+ //TODO
+  },
+  personnes: 4
+},
+{
+  name: "Empanadas",
+  ingredients: {
+ //TODO
+  },
+  personnes: 4
+},
+{
+  name: "Pho",
+  ingredients: {
+    //TODO
+  },
+  personnes: 4,
+  link: "https://www.notion.so/dekajoo/Pho-e8ca0efeeeeb436bb28028c32aee8a29"
 },
 {
   name: "Crèpes sucrées",
