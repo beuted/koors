@@ -21,7 +21,7 @@ let recettes = [{
     "épinards frais": 1,
     "pot yaourt skir": 1,
     "tomate": 2,
-    "échalottes": 2
+    "échalotes": 2
   },
   link: "https://owiowifouettemoi.com/2019/01/23/the-stew-pois-chiche-coco-et-curcuma/"
 },
@@ -110,10 +110,14 @@ let recettes = [{
     "poivron": 3,
     "aubergine": 1,
     "tomate": 3,
-    "concassé tomate 50cl": 1,
-    "fromage rapé": 1
+    "coulis de tomate 200g": 1,
+    "fromage rapé": 1,
+    "lait": 1,
+    "beurre": 1,
+    "noix de muscade": 1
   },
-  personnes: 4
+  personnes: 4,
+  link: "https://www.marmiton.org/recettes/recette_lasagnes-vegetariennes-facile_10527.aspx"
 },
 {
   name: "Dhal de choux-fleur et de lentille corail",
@@ -150,10 +154,19 @@ let recettes = [{
   name: "Curry patate douce lentilles",
   personnes: 4,
   ingredients: {
-    //TODO
+    "lentille": 1,
+    "ail": 1,
+    "échalote": 1,
+    "oignon": 1,
+    "gingembre": 1,
+    "huile d'olive": 1,
+    "lait de coco": 1,
+    "patate douce": 2,
+    "noix de cajou": 1,
+    "salade": 1
   },
   link: "https://dekajoo.notion.site/Curry-de-patate-douce-e8a2fee688b14c07b8f1d8eff98a201c"
-},            
+},
 {
   name: "Salade de lentille",
   ingredients: {
@@ -307,44 +320,52 @@ let recettes = [{
 {
   name: "Bruschetta",
   ingredients: {
- //TODO
+    //TODO
   },
   personnes: 4
 },
 {
   name: "Fajitas",
   ingredients: {
- //TODO
+    //TODO
   },
   personnes: 4
 },
 {
   name: "Enchiladas végé",
   ingredients: {
- //TODO
+    //TODO
   },
   personnes: 4
 },
 {
   name: "Flammekueche",
   ingredients: {
- //TODO
+    //TODO
   },
   personnes: 4
 },
 {
   name: "Empanadas",
   ingredients: {
- //TODO
+    //TODO
   },
   personnes: 4
 },
 {
   name: "Pho",
   ingredients: {
-    //TODO
+    "bouillon cube": 1,
+    "poireau": 2,
+    "champignon": 1,
+    "sauce soja": 1,
+    "nuoc mam": 1,
+    "gingembre": 1,
+    "piment vert": 1,
+    "ail": 1,
+    "oignon": 1,
   },
-  personnes: 4,
+  personnes: 2,
   link: "https://www.notion.so/dekajoo/Pho-e8ca0efeeeeb436bb28028c32aee8a29"
 },
 {
@@ -522,6 +543,7 @@ export let ingredientsToValidate = [
   "origan",
   "ail",
   "oignon",
+  "échalote",
   "oeuf",
   "farine 100g",
   "farine d'épeautre",
@@ -539,12 +561,14 @@ export let ingredientsToValidate = [
   "harissa",
   "coriandre",
   "sauce soja",
+  "nuoc mam",
   "galette de riz",
   "semoule 200g",
   "pomme de terre",
   "beurre",
   "rhum",
   "nutella",
+  "lentille"
 ]
 
 export let categoryMap = {
@@ -552,10 +576,11 @@ export let categoryMap = {
   "oignon": "fruits-et-légumes",
   "oignon rouge": "fruits-et-légumes",
   "ail": "fruits-et-légumes",
+  "échalote": "fruits-et-légumes",
   "gingembre": "fruits-et-légumes",
   "épinards frais": "fruits-et-légumes",
   "tomate": "fruits-et-légumes",
-  "échalottes": "fruits-et-légumes",
+  "échalotes": "fruits-et-légumes",
   "fruits": "fruits-et-légumes",
   "carotte": "fruits-et-légumes",
   "poivron": "fruits-et-légumes",
@@ -576,6 +601,7 @@ export let categoryMap = {
   "menthe": "fruits-et-légumes",
   "pomme de terre": "fruits-et-légumes",
   "champignon": "fruits-et-légumes",
+  "poireau": "fruits-et-légumes",
 
   // épices
   "curcuma": "épices",
@@ -610,6 +636,7 @@ export let categoryMap = {
   "concassé tomate 50cl": "conserves",
   "haricot rouge 300g": "conserves",
   "concentré de tomate": "conserves",
+  "coulis de tomate 200g": "conserves",
 
   // sauces + feculents
   "lentille corail 200g": "sauce-feculent",
@@ -654,6 +681,7 @@ export let categoryMap = {
   "levure": 'ingredient-cuisine',
   "pignons de pain": 'ingredient-cuisine',
   "noix 70g": 'ingredient-cuisine',
+  "noix de cajou": 'ingredient-cuisine',
   "abricots sec": 'ingredient-cuisine',
   "amandes": 'ingredient-cuisine',
   "graines": 'ingredient-cuisine',
@@ -662,11 +690,13 @@ export let categoryMap = {
 
   // Cuisine du monde
   "lait de coco gras 400ml": 'cuisine-du-monde',
+  "lait de coco": 'cuisine-du-monde',
   "huile de coco": 'cuisine-du-monde',
   "vermicelle de riz 60g": 'cuisine-du-monde',
   "galette de riz": 'cuisine-du-monde',
   "pousse de soja 100g": 'cuisine-du-monde',
   "sauce soja": 'cuisine-du-monde',
+  "nuoc mam": 'cuisine-du-monde',
   "vinaigre de riz": 'cuisine-du-monde',
 
   //
