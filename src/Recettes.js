@@ -21,7 +21,7 @@ let recettes = [{
     "épinards frais": 1,
     "pot yaourt skir": 1,
     "tomate": 2,
-    "échalotes": 2
+    "échalote": 2
   },
   link: "https://owiowifouettemoi.com/2019/01/23/the-stew-pois-chiche-coco-et-curcuma/"
 },
@@ -416,105 +416,105 @@ let recettes = [{
 },
 {
   name: "PQ",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "PQ": 1,
   }
 },
 {
   name: "café",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "café": 1,
   }
 },
 {
   name: "dentrifice",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "dentrifice": 1,
   }
 },
 {
   name: "tablettes lave vaisselle",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "tablettes lave vaisselle": 1,
   }
 },
 {
   name: "liquide rincage",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "liquide rincage": 1,
   }
 },
 {
   name: "lessive",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "lessive": 1,
   }
 },
 {
   name: "tampon",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "tampon": 1,
   }
 },
 {
   name: "beurre",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "beurre": 1,
   }
 },
 {
   name: "chocolat",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "beurre": 1,
   }
 },
 {
   name: "huile d'olive",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "huile d'olive": 1,
   }
 },
 {
   name: "vinaigre",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "vinaigre": 1,
   }
 },
 {
   name: "sel",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "sel": 1,
   }
 },
 {
   name: "poivre",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "poivre": 1,
   }
 },
 {
   name: "sirop",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "sirop": 1,
   }
 },
 {
   name: "fruits",
-  singleItem: true,
+  type: "singleItem",
   ingredients: {
     "fruits": 1,
   }
@@ -580,7 +580,6 @@ export let categoryMap = {
   "gingembre": "fruits-et-légumes",
   "épinards frais": "fruits-et-légumes",
   "tomate": "fruits-et-légumes",
-  "échalotes": "fruits-et-légumes",
   "fruits": "fruits-et-légumes",
   "carotte": "fruits-et-légumes",
   "poivron": "fruits-et-légumes",

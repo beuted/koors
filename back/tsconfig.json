@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "noImplicitAny": true,
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "types": [
+      "node"
+    ],
+    "target": "es6",
+    "inlineSourceMap": true
+  },
+  "files": [
+    "index.ts"
+  ]
+}

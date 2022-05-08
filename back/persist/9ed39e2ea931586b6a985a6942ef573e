@@ -1,0 +1,49 @@
+{
+  "key": "state",
+  "value": {
+    "patate douce": {
+      "count": 0,
+      "checked": false
+    },
+    "farine 100g": {
+      "count": 2,
+      "checked": false
+    },
+    "fromage rapé": {
+      "count": 1,
+      "checked": false
+    },
+    "allumettes de bacon": {
+      "count": 2,
+      "checked": false
+    },
+    "crème fraiche": {
+      "count": 1,
+      "checked": false
+    },
+    "pates longues 250g": {
+      "count": 1,
+      "checked": false
+    },
+    "sirop": {
+      "count": 1,
+      "checked": false
+    },
+    "fruits": {
+      "count": 1,
+      "checked": false
+    },
+    "oignon": {
+      "count": 4,
+      "checked": false
+    },
+    "boudin": {
+      "count": 8,
+      "checked": false
+    },
+    "tomate": {
+      "count": 2,
+      "checked": false
+    }
+  }
+}
