@@ -35,91 +35,99 @@ function App() {
   const [typeNewRecette, setTypeNewRecette] = useState("default");
   const [linkNewRecette, setLinkNewRecette] = useState("");
   const [nbPersonnesNewRecette, setNbPersonnesNewRecette] = useState(0);
-
   const [nameNewIngredient, setNameNewIngredient] = useState("");
   const [categoryNewIngredient, setCategoryNewIngredient] = useState("");
   const [confirmNewIngredient, setConfirmNewIngredient] = useState("false");
   const [password, setPassword] = useState("");
   const [adminValidated, setAdminValidated] = useState(false);
 
+  const delayBetweenRefresh = 5000; //ms
+
   useEffect(() => {
     (async () => {
-      // Ingredients
-      try {
-        const responseJson = await fetch("/api/ingredients", {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'auth': password
-          },
-          method: "GET"
-        });
-        const response = await responseJson.json();
+      await refreshFromServer();
 
-        let { ingredientsToValidate, categoryMap } = response;
-        console.log("fetch recettes from server", ingredientsToValidate, categoryMap);
-
-        if (ingredientsToValidate)
-          setIngredientsToValidate(ingredientsToValidate);
-
-        if (categoryMap)
-          setCategoryMap(categoryMap);
-
-      } catch (err) {
-        console.error(err);
-        //localStorage.removeItem('koors-items');
-        return;
-      }
-
-      // Items
-      try {
-        const responseJson = await fetch("/api/state/42", {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'auth': password
-          },
-          method: "GET"
-        });
-        const response = await responseJson.json();
-
-        let items = response;
-        console.log("fetch items from server", items);
-
-        if (items)
-          setItems(items);
-
-      } catch (err) {
-        console.error(err);
-        //localStorage.removeItem('koors-items');
-        return;
-      }
-
-      // Recettes
-      try {
-        const responseJson = await fetch("/api/recettes", {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'auth': password
-          },
-          method: "GET"
-        });
-        const response = await responseJson.json();
-
-        let recettes = response;
-        console.log("fetch recettes from server", recettes);
-
-        if (recettes)
-          setRecettes(recettes);
-
-      } catch (err) {
-        console.error(err);
-        //localStorage.removeItem('koors-items');
-        return;
-      }
+      let id = setInterval(refreshFromServer, delayBetweenRefresh);
+      return () => clearInterval(id);
     })();
   }, [])
+
+  async function refreshFromServer() {
+    // Ingredients
+    try {
+      const responseJson = await fetch("/api/ingredients", {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'auth': password
+        },
+        method: "GET"
+      });
+      const response = await responseJson.json();
+
+      let { ingredientsToValidate, categoryMap } = response;
+      console.log("fetch recettes from server", ingredientsToValidate, categoryMap);
+
+      if (ingredientsToValidate)
+        setIngredientsToValidate(ingredientsToValidate);
+
+      if (categoryMap)
+        setCategoryMap(categoryMap);
+
+    } catch (err) {
+      console.error(err);
+      //localStorage.removeItem('koors-items');
+      return;
+    }
+
+    // Items
+    try {
+      const responseJson = await fetch("/api/state/42", {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'auth': password
+        },
+        method: "GET"
+      });
+      const response = await responseJson.json();
+
+      let items = response;
+      console.log("fetch items from server", items);
+
+      if (items)
+        setItems(items);
+
+    } catch (err) {
+      console.error(err);
+      //localStorage.removeItem('koors-items');
+      return;
+    }
+
+    // Recettes
+    try {
+      const responseJson = await fetch("/api/recettes", {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'auth': password
+        },
+        method: "GET"
+      });
+      const response = await responseJson.json();
+
+      let recettes = response;
+      console.log("fetch recettes from server", recettes);
+
+      if (recettes)
+        setRecettes(recettes);
+
+    } catch (err) {
+      console.error(err);
+      //localStorage.removeItem('koors-items');
+      return;
+    }
+  }
 
   useEffect(() => {
     (async () => {
