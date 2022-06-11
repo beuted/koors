@@ -14,7 +14,7 @@ async function Init() {
   const app = express();
   http.createServer(app);
 
-  const port = process.env['PORT'] || 3000;
+  const port = process.env['PORT'] || 4000;
 
   await storage.init({
     dir: './persist',

@@ -43,6 +43,8 @@ function App() {
 
   const delayBetweenRefresh = 5000; //ms
 
+  let inputRef;
+
   useEffect(() => {
     (async () => {
       await refreshFromServer();
@@ -119,8 +121,10 @@ function App() {
       let recettes = response;
       console.log("fetch recettes from server", recettes);
 
-      if (recettes)
+      if (recettes) {
+        recettes = recettes.sort((r1, r2) => (r1.type ?? 'default') < (r2.type ?? 'default') ? 1 : -1);
         setRecettes(recettes);
+      }
 
     } catch (err) {
       console.error(err);
@@ -210,8 +214,12 @@ function App() {
     else
       newItems[nameNewItem].count += 1;
 
+    // Clear input
     setItems(newItems);
     setNameNewItem("");
+
+    // Focus input
+    inputRef.focus();
   }
 
   function copyToClipBoard() {
@@ -314,6 +322,10 @@ function App() {
     else
       updatedValue[name] = quantity;
     setNewRecetteIngredients(updatedValue);
+
+    // Reset input
+    setNameNewRecetteIngredient('');
+    setQuantityNewRecetteIngredient(1);
   }
 
   async function addNewRecette() {
@@ -473,9 +485,10 @@ function App() {
               className="itemNameField"
               options={Object.keys(categoryMap)}
               onChange={(e, value) => { setNameNewItem(value) }}
+              value={nameNewItem}
               freeSolo
               renderInput={(params) => (
-                <TextField {...params} label="nouvel ingredient" variant="standard" />
+                <TextField {...params} label="nouvel ingredient" variant="standard" inputRef={input => { inputRef = input; }}/>
               )}
             />
             <button className="actionButton" disabled={!nameNewItem} onClick={() => createNewItem()}>Add</button>
@@ -604,6 +617,7 @@ function App() {
                   className="itemNameField"
                   options={Object.keys(categoryMap)}
                   onChange={(e, value) => { setNameNewRecetteIngredient(value) }}
+                  value={nameNewRecetteIngredient}
                   renderInput={(params) => (
                     <TextField {...params} label="Ingredient" variant="standard" />
                   )}
@@ -616,6 +630,7 @@ function App() {
                   inputProps={{ min: 1 }}
                   defaultValue={1}
                   variant="standard"
+                  value={quantityNewRecetteIngredient}
                   onChange={(event) => { setQuantityNewRecetteIngredient(Number(event.target.value)) }}
                 />
 
@@ -646,6 +661,7 @@ function App() {
             type="string"
             variant="standard"
             onChange={(event) => { setPassword(event.target.value) }}
+            autoFocus
           />
 
           <div className="modal-actions">
