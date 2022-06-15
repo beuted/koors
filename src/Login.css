@@ -1,0 +1,21 @@
+html,
+body,
+#root,
+.Koors,
+.Login {
+  height: 100%;
+}
+
+.Login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+}
+
+.login-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}

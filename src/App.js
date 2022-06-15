@@ -1,6 +1,7 @@
 import './App.css';
 import { categories } from './Recettes.js';
 import React, { useEffect, useState } from 'react';
+import { useSearchParams, useNavigate } from "react-router-dom";
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Grid from '@mui/material/Grid';
@@ -27,7 +28,7 @@ function App() {
   const [showNewIngredientModal, setShowNewIngredientModal] = useState(false);
   const [showNewRecetteModal, setShowNewRecetteModal] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [itemsToValide, setItemsToValide] = useState([]);
+  const [itemsToValidate, setItemsToValidate] = useState([]);
   const [newRecetteIngredients, setNewRecetteIngredients] = useState({});
   const [quantityNewRecetteIngredient, setQuantityNewRecetteIngredient] = useState(1);
   const [nameNewRecetteIngredient, setNameNewRecetteIngredient] = useState("");
@@ -41,17 +42,29 @@ function App() {
   const [password, setPassword] = useState("");
   const [adminValidated, setAdminValidated] = useState(false);
 
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const delayBetweenRefresh = 5000; //ms
 
   let inputRef;
 
+
   useEffect(() => {
+    // Start the refresh loop that will warn the server that something changed
     (async () => {
       await refreshFromServer();
 
       let id = setInterval(refreshFromServer, delayBetweenRefresh);
       return () => clearInterval(id);
     })();
+
+    const login = searchParams.get("login");
+    console.log("login", login);
+    if (login == null || login == '') {
+      navigate('/'); // go back to login page
+    }
+
   }, [])
 
   async function refreshFromServer() {
@@ -164,11 +177,11 @@ function App() {
 
 
   useEffect(() => {
-    if (itemsToValide && itemsToValide.length > 0)
+    if (itemsToValidate && itemsToValidate.length > 0)
       setShowModal(true);
     else
       setShowModal(false);
-  }, [itemsToValide])
+  }, [itemsToValidate])
 
   function addItems(recetteName) {
     var newItems = Object.assign({}, items);
@@ -176,7 +189,7 @@ function App() {
     let recette = recettes.find(x => x.name === recetteName);
 
     if (recette.type != "singleItem") // If this is a single item recette don't validate
-      setItemsToValide(Object.keys(recette.ingredients).filter(x => ingredientsToValidate.includes(x)));
+      setItemsToValidate(Object.keys(recette.ingredients).filter(x => ingredientsToValidate.includes(x)));
 
     for (var item of Object.entries(recette.ingredients)) {
       if (!newItems[item[0]])
@@ -268,13 +281,13 @@ function App() {
     var newItems = Object.assign({}, items);
     delete newItems[itemKey]
     setItems(newItems);
-    var newItemsToValide = itemsToValide.filter(x => x !== itemKey);
-    setItemsToValide(newItemsToValide);
+    var newItemsToValide = itemsToValidate.filter(x => x !== itemKey);
+    setItemsToValidate(newItemsToValide);
   }
 
   function validateItem(itemKey) {
-    var newItemsToValide = itemsToValide.filter(x => x !== itemKey);
-    setItemsToValide(newItemsToValide);
+    var newItemsToValide = itemsToValidate.filter(x => x !== itemKey);
+    setItemsToValidate(newItemsToValide);
   }
 
   function checkItem(itemKey) {
@@ -488,7 +501,7 @@ function App() {
               value={nameNewItem}
               freeSolo
               renderInput={(params) => (
-                <TextField {...params} label="nouvel ingredient" variant="standard" inputRef={input => { inputRef = input; }}/>
+                <TextField {...params} label="nouvel ingredient" variant="standard" inputRef={input => { inputRef = input; }} />
               )}
             />
             <button className="actionButton" disabled={!nameNewItem} onClick={() => createNewItem()}>Add</button>
@@ -507,10 +520,10 @@ function App() {
 
       {showModal ? <div className="modal-container" onClick={(event) => event.stopPropagation()}>
         <div className="modal">
-          <div className="modal-title">Déjà du {itemsToValide[0]} en stock ?</div>
+          <div className="modal-title">Déjà du {itemsToValidate[0]} en stock ?</div>
           <div className="modal-actions">
-            <button className="actionButton" onClick={() => removeItem(itemsToValide[0])}>Oui 👍</button>
-            <button className="actionButton" onClick={() => validateItem(itemsToValide[0])}>Non 🛒</button>
+            <button className="actionButton" onClick={() => removeItem(itemsToValidate[0])}>Oui 👍</button>
+            <button className="actionButton" onClick={() => validateItem(itemsToValidate[0])}>Non 🛒</button>
           </div>
 
         </div>
