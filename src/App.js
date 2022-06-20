@@ -1,5 +1,6 @@
 import './App.css';
 import { categories } from './Recettes.js';
+import { hashPassword } from './Login.js';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from "react-router-dom";
 import TextField from '@mui/material/TextField';
@@ -26,6 +27,7 @@ function App() {
   const [nameNewItem, setNameNewItem] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showNewIngredientModal, setShowNewIngredientModal] = useState(false);
+  const [deleteIngredientModal, setDeleteIngredientModal] = useState(false);
   const [showNewRecetteModal, setShowNewRecetteModal] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [itemsToValidate, setItemsToValidate] = useState([]);
@@ -39,49 +41,67 @@ function App() {
   const [nameNewIngredient, setNameNewIngredient] = useState("");
   const [categoryNewIngredient, setCategoryNewIngredient] = useState("");
   const [confirmNewIngredient, setConfirmNewIngredient] = useState("false");
-  const [password, setPassword] = useState("");
+  const [hashedPassword, setHashedPassword] = useState("");
+  const [user, setUser] = useState("");
   const [adminValidated, setAdminValidated] = useState(false);
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const delayBetweenRefresh = 5000; //ms
+  
+  let id = null; // setInverval Id
 
   let inputRef;
 
 
   useEffect(() => {
+    const user = searchParams.get("user");
+    if (user == null || user == '') {
+      navigate('/'); // go back to user page
+      return;
+    } else {
+      setUser(user);
+    }
+
+    // Hashed password doesn't have to be define if you are in spec mode
+    const hash = localStorage.getItem('auth');
+    setHashedPassword(hash);
+  }, [])
+
+  useEffect(() => {
+    if (user == null || user.length == 0)
+      return;
+
+    if (id != null) {
+      clearInterval(id);
+      id = null;
+    }
+
     // Start the refresh loop that will warn the server that something changed
     (async () => {
       await refreshFromServer();
 
-      let id = setInterval(refreshFromServer, delayBetweenRefresh);
+      id = setInterval(refreshFromServer, delayBetweenRefresh);
       return () => clearInterval(id);
     })();
+  }, [hashedPassword, user])
 
-    const login = searchParams.get("login");
-    console.log("login", login);
-    if (login == null || login == '') {
-      navigate('/'); // go back to login page
-    }
-
-  }, [])
-
-  async function refreshFromServer() {
+  const refreshFromServer = async () => {
     // Ingredients
     try {
       const responseJson = await fetch("/api/ingredients", {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'auth': password
+          'auth': hashedPassword,
+          'user': user
         },
         method: "GET"
       });
       const response = await responseJson.json();
 
       let { ingredientsToValidate, categoryMap } = response;
-      console.log("fetch recettes from server", ingredientsToValidate, categoryMap);
 
       if (ingredientsToValidate)
         setIngredientsToValidate(ingredientsToValidate);
@@ -97,21 +117,21 @@ function App() {
 
     // Items
     try {
-      const responseJson = await fetch("/api/state/42", {
+      const responseJson = await fetch("/api/state", {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'auth': password
+          'auth': hashedPassword,
+          'user': user
         },
         method: "GET"
       });
       const response = await responseJson.json();
 
-      let items = response;
-      console.log("fetch items from server", items);
-
-      if (items)
-        setItems(items);
+      // Hacky way to avoid setting item (and triggering hooks) every time the state is fetched
+      if (response && JSON.stringify(response) != JSON.stringify(items)) {
+        setItems(response);
+      }
 
     } catch (err) {
       console.error(err);
@@ -125,17 +145,19 @@ function App() {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'auth': password
+          'auth': hashedPassword,
+          'user': user
         },
         method: "GET"
       });
       const response = await responseJson.json();
 
       let recettes = response;
-      console.log("fetch recettes from server", recettes);
 
       if (recettes) {
-        recettes = recettes.sort((r1, r2) => (r1.type ?? 'default') < (r2.type ?? 'default') ? 1 : -1);
+        // Sort alphabetically on name then on category
+        recettes.sort((r1, r2) => r1.name.toLowerCase() < r2.name.toLowerCase() ? 1 : -1);
+        recettes.sort((r1, r2) => (r1.type ?? 'default') < (r2.type ?? 'default') ? 1 : -1);
         setRecettes(recettes);
       }
 
@@ -149,25 +171,26 @@ function App() {
   useEffect(() => {
     (async () => {
       if (items && Object.keys(items).length > 0) {
-        console.log("update server", items);
-        //localStorage.setItem('koors-items', JSON.stringify(items));
         try {
-          const responseJson = await fetch("/api/state/42", {
+          const responseJson = await fetch("/api/state", {
             headers: {
               'Accept': 'application/json',
               'Content-Type': 'application/json',
-              'auth': password // Bat les couilles des man in the middle
+              'auth': hashedPassword,
+              'user': user
             },
             method: "POST",
             body: JSON.stringify(items)
           });
           const response = await responseJson.text();
-          console.log(response);
         } catch (err) {
           console.error(err);
         }
 
         var itemKeys = Object.keys(items);
+
+        // Sort alphabetically on name then on category
+        itemKeys.sort((i1, i2) => i1.toLowerCase() < i2.toLowerCase() ? 1 : -1);
         // Defining a category for manually added item just for sorting
         itemKeys.sort((i1, i2) => ((categoryMap[i1] ?? '000') < (categoryMap[i2] ?? '000')) ? 1 : -1);
         setOrderedItems(itemKeys);
@@ -213,6 +236,7 @@ function App() {
   function increaseItem(itemName, evt) {
     var newItems = Object.assign({}, items);
     newItems[itemName].count++;
+
     setItems(newItems);
     evt.stopPropagation();
   }
@@ -228,6 +252,7 @@ function App() {
       newItems[nameNewItem].count += 1;
 
     // Clear input
+
     setItems(newItems);
     setNameNewItem("");
 
@@ -245,21 +270,22 @@ function App() {
   }
 
   async function reset() {
+
     setItems({});
     setOrderedItems([]);
 
     try {
-      const responseJson = await fetch("/api/state/42", {
+      const responseJson = await fetch("/api/state", {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'auth': password
+          'auth': hashedPassword,
+          'user': user
         },
         method: "POST",
         body: JSON.stringify({})
       });
       const response = await responseJson.text();
-      console.log(response);
     } catch (err) {
       console.error(err);
     }
@@ -280,6 +306,7 @@ function App() {
   function removeItem(itemKey) {
     var newItems = Object.assign({}, items);
     delete newItems[itemKey]
+
     setItems(newItems);
     var newItemsToValide = itemsToValidate.filter(x => x !== itemKey);
     setItemsToValidate(newItemsToValide);
@@ -293,6 +320,7 @@ function App() {
   function checkItem(itemKey) {
     var newItems = Object.assign({}, items);
     newItems[itemKey].checked = !newItems[itemKey].checked;
+
     setItems(newItems);
   }
 
@@ -359,7 +387,8 @@ function App() {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'auth': password
+          'auth': hashedPassword,
+          'user': user
         },
         method: "POST",
         body: JSON.stringify(newRecettes)
@@ -383,7 +412,8 @@ function App() {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'auth': password
+          'auth': hashedPassword,
+          'user': user
         },
         method: "DELETE",
       });
@@ -414,7 +444,8 @@ function App() {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'auth': password
+          'auth': hashedPassword,
+          'user': user
         },
         method: "POST",
         body: JSON.stringify({
@@ -434,27 +465,91 @@ function App() {
     setCategoryNewIngredient("000-none");
   }
 
+  async function deleteIngredient() {
+    if (!nameNewIngredient || nameNewIngredient == "")
+      return;
+
+    // TODO: vérifier qu'il n'ets pas dans une recette
+    let recettesIncludingIngredient = [];
+    for (let recette of recettes) {
+      if (Object.keys(recette.ingredients).includes(nameNewIngredient)) {
+        recettesIncludingIngredient.push(recette.name)
+      }
+    }
+
+    if (recettesIncludingIngredient.length > 0) {
+      alert(`Impossible de supprimer l'ingrédient ${nameNewIngredient}, supprimez d'abord les recettes qui le contienne: ${recettesIncludingIngredient.map(x => `"${x}"`).join(", ")}`);
+      return;
+    }
+
+    let newCategoryMap = Object.assign({}, categoryMap);
+    delete newCategoryMap[nameNewIngredient];
+
+    let newIngredientsToValidate = ingredientsToValidate.filter(x => x != nameNewIngredient);
+
+    // Update server to delete the ingredient
+    try {
+      const responseJson = await fetch("/api/ingredients", {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'auth': hashedPassword,
+          'user': user
+        },
+        method: "POST",
+        body: JSON.stringify({
+          ingredientsToValidate: newIngredientsToValidate,
+          categoryMap: newCategoryMap
+        })
+      });
+      const response = await responseJson.text();
+    } catch (err) {
+      console.error(err);
+    }
+
+    // Reset the fields
+    setNameNewIngredient("");
+    setConfirmNewIngredient("false");
+    setCategoryNewIngredient("000-none");
+  }
+
   async function testPassword() {
     try {
       const response = await fetch("/api/password", {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'auth': password
+          'auth': hashedPassword,
+          'user': user
         },
         method: "GET"
       });
-      if (response.status != 200) {
+
+      if (!response.ok) {
         alert('Mauvais mot de passe');
         setAdminValidated(false);
+        return false;
       } else {
+        localStorage.setItem('auth', hashedPassword);
         setAdminValidated(true);
+        return true;
       }
     } catch (err) {
       alert('Mauvais mot de passe');
       setAdminValidated(false);
+      return false;
+    }
+  }
+
+  async function testPasswordAndSetShowAdmin(adminValidated) {
+    if (adminValidated) {
+      setAdminValidated(false);
+      return;
     }
 
+    const success = await testPassword();
+    if (!success)
+      setShowAdmin(true);    
   }
 
   return (
@@ -513,8 +608,9 @@ function App() {
           <button className="actionButton" onClick={() => copyToClipBoard()}>📋 copy</button>
           <button className="actionButton" onClick={() => exportToGKeep()}>📝 google keep</button>
           {adminValidated ? (<button className="actionButton" onClick={() => setShowNewIngredientModal(!showNewIngredientModal)}>Nouvel ingredient</button>) : null}
+          {adminValidated ? (<button className="actionButton" onClick={() => setDeleteIngredientModal(!deleteIngredientModal)}>Supprimer un ingredient</button>) : null}
           {adminValidated ? (<button className="actionButton" onClick={() => setShowNewRecetteModal(!showNewRecetteModal)}>Nouvelle recette</button>) : null}
-          <button className="actionButton" onClick={() => setShowAdmin(!showAdmin)}>Admin</button>
+          <button className="actionButton" onClick={() => testPasswordAndSetShowAdmin(adminValidated)}>Admin</button>
         </div>
       </div>
 
@@ -562,7 +658,26 @@ function App() {
           </Select>
           <div className="modal-actions">
             <button className="actionButton" onClick={() => setShowNewIngredientModal(false)}>Annuler</button>
-            <button className="actionButton" onClick={() => { addNewIngredient(); setShowNewIngredientModal(false); }}>Valider l'ingredient</button>
+            <button className="actionButton" disabled={!nameNewIngredient} onClick={() => { addNewIngredient(); setShowNewIngredientModal(false); }}>Valider l'ingredient</button>
+          </div>
+        </Stack>
+      </div> : null
+      }
+
+      {deleteIngredientModal ? <div className="modal-container" onClick={(event) => { event.stopPropagation(); setDeleteIngredientModal(false); }}>
+        <Stack sx={{ p: 4 }} spacing={3} className="modal" onClick={(event) => event.stopPropagation()}>
+          <div className="modal-title">Supprimer un ingredient</div>
+          <Autocomplete
+            options={Object.keys(categoryMap)}
+            onChange={(e, value) => { setNameNewIngredient(value) }}
+            value={nameNewIngredient}
+            renderInput={(params) => (
+              <TextField {...params} label="Ingredient" variant="standard" />
+            )}/>
+
+          <div className="modal-actions">
+            <button className="actionButton" onClick={() => setDeleteIngredientModal(false)}>Annuler</button>
+            <button className="actionButton" disabled={!nameNewIngredient} onClick={() => { deleteIngredient(); setDeleteIngredientModal(false); }}>Supprimer l'ingredient</button>
           </div>
         </Stack>
       </div> : null
@@ -641,7 +756,6 @@ function App() {
                   label="Quantité"
                   type="number"
                   inputProps={{ min: 1 }}
-                  defaultValue={1}
                   variant="standard"
                   value={quantityNewRecetteIngredient}
                   onChange={(event) => { setQuantityNewRecetteIngredient(Number(event.target.value)) }}
@@ -668,12 +782,12 @@ function App() {
 
       {showAdmin ? <div className="modal-container" onClick={(event) => { event.stopPropagation(); setShowAdmin(false); }}>
         <Stack sx={{ p: 4 }} spacing={3} className="modal" onClick={(event) => event.stopPropagation()}>
-          <div className="modal-title">Mot de passe</div>
+          <div className="modal-title">Se connecter en tant qu'admin</div>
           <TextField
             label="Mot de passe"
-            type="string"
+            type="password"
             variant="standard"
-            onChange={(event) => { setPassword(event.target.value) }}
+            onChange={async (event) => { setHashedPassword(await hashPassword(event.target.value)) }}
             autoFocus
           />
 
