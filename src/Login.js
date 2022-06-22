@@ -2,6 +2,8 @@ import './Login.css';
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import TextField from '@mui/material/TextField';
+import sha256 from 'crypto-js/sha256';
+import Base64 from 'crypto-js/enc-base64';
 
 function Login() {
   const [user, setUser] = useState('');
@@ -17,7 +19,7 @@ function Login() {
     if (!user || user === '' || !password || password === '')
       return;
 
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = hashPassword(password);
 
     // Call a endpoint that will create a new entry in db with this login and hashed password and prefill it with info then call "loginToTheApp"
     try {
@@ -52,7 +54,7 @@ function Login() {
 
   async function registerToTheApp() {
 
-    let hashedPassword = await hashPassword(password);
+    let hashedPassword = hashPassword(password);
 
     // Call a endpoint that will create a new entry in db with this login and hashed password and prefill it with info then call "loginToTheApp"
     try {
@@ -129,17 +131,12 @@ function Login() {
   )
 }
 
-export async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  return buf2hex(hashBuffer);
+// NOTE I use a lib because the use of crypto.subtle is restricted in non secure context (http)
+// And if someone wants to man in the middle on the app I don't give a flying fuck so it'll stay http
+export function hashPassword(password) {
+  const hashBuffer = sha256(password);
+  console.log(Base64.stringify(hashBuffer));
+  return Base64.stringify(hashBuffer);
 } 
-
-function buf2hex(buffer) { // buffer is an ArrayBuffer
-  return [...new Uint8Array(buffer)]
-    .map(x => x.toString(16).padStart(2, '0'))
-    .join('');
-}
 
 export default Login;

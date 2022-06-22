@@ -787,7 +787,7 @@ function App() {
             label="Mot de passe"
             type="password"
             variant="standard"
-            onChange={async (event) => { setHashedPassword(await hashPassword(event.target.value)) }}
+            onChange={async (event) => { setHashedPassword(hashPassword(event.target.value)) }}
             autoFocus
           />
 
