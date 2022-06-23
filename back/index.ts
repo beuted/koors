@@ -2,6 +2,7 @@ import * as express from "express";
 import * as http from "http";
 import * as storage from "node-persist";
 import * as crypto from "crypto";
+import * as path from "path";
 import {
   defaultRecettes,
   defaultCategoryMap,
@@ -227,6 +228,11 @@ async function Init() {
     }
     await storage.setItem("state", value);
     res.status(200).send();
+  });
+
+  // Any request that didn't match an API return index.html
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "..", "build", "index.html"));
   });
 
   async function isAuthenticated(

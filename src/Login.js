@@ -1,5 +1,5 @@
 import './Login.css';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import TextField from '@mui/material/TextField';
 import sha256 from 'crypto-js/sha256';
@@ -14,6 +14,16 @@ function Login() {
   const [registerError, setRegisterError] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // If you already had a user when the page load we redirect you to it
+    const user = localStorage.getItem('user');
+    if (!user) return;
+    navigate({
+      pathname: '/app',
+      search: `?user=${user}`,
+    });
+  }, [])
 
   async function loginToTheApp() {
     if (!user || user === '' || !password || password === '')
@@ -45,6 +55,7 @@ function Login() {
     setLoginError(false);
 
     localStorage.setItem('auth', hashedPassword);
+    localStorage.setItem('user', user);
 
     navigate({
       pathname: '/app',
@@ -53,7 +64,6 @@ function Login() {
   }
 
   async function registerToTheApp() {
-
     let hashedPassword = hashPassword(password);
 
     // Call a endpoint that will create a new entry in db with this login and hashed password and prefill it with info then call "loginToTheApp"
@@ -116,13 +126,13 @@ function Login() {
 
         <div>
         { !registerMode ? <>
-            <button className="actionButton" onClick={() => loginToTheApp()} disabled={!user || user === '' || !password || password === ''}>Login</button>
-            <button className="actionButton light" onClick={() => {setRegisterMode(true); setLoginError(false);}}>Register</button>
+            <button className="actionButton" onClick={() => loginToTheApp()} disabled={!user || user === '' || !password || password === ''}>S'indentifier</button>
+            <button className="actionButton light" onClick={() => {setRegisterMode(true); setLoginError(false);}}>S'enregister</button>
           </>
           : 
           <>
-            <button className="actionButton" onClick={() => registerToTheApp()} disabled={!user || user === '' || !password || password === '' || confirmPassword !== password}>New account</button>
-            <button className="actionButton light" onClick={() => {setRegisterMode(false); setRegisterError(false);}}>Back</button>
+            <button className="actionButton" onClick={() => registerToTheApp()} disabled={!user || user === '' || !password || password === '' || confirmPassword !== password}>Nouveau compte</button>
+            <button className="actionButton light" onClick={() => {setRegisterMode(false); setRegisterError(false);}}>Retour</button>
           </>
         }
         </div>

@@ -111,7 +111,6 @@ function App() {
 
     } catch (err) {
       console.error(err);
-      //localStorage.removeItem('koors-items');
       return;
     }
 
@@ -135,7 +134,6 @@ function App() {
 
     } catch (err) {
       console.error(err);
-      //localStorage.removeItem('koors-items');
       return;
     }
 
@@ -163,7 +161,6 @@ function App() {
 
     } catch (err) {
       console.error(err);
-      //localStorage.removeItem('koors-items');
       return;
     }
   }
@@ -552,6 +549,12 @@ function App() {
       setShowAdmin(true);    
   }
 
+  function disconnect() {
+    localStorage.removeItem('user');
+    localStorage.removeItem('auth');
+    navigate({ pathname: '/' });
+  }
+
   return (
     <div className="App">
       <div className="container">
@@ -611,6 +614,7 @@ function App() {
           {adminValidated ? (<button className="actionButton" onClick={() => setDeleteIngredientModal(!deleteIngredientModal)}>Supprimer un ingredient</button>) : null}
           {adminValidated ? (<button className="actionButton" onClick={() => setShowNewRecetteModal(!showNewRecetteModal)}>Nouvelle recette</button>) : null}
           <button className="actionButton" onClick={() => testPasswordAndSetShowAdmin(adminValidated)}>Admin</button>
+          <button className="actionButton" onClick={() => disconnect()}>Déconnection</button>
         </div>
       </div>
 
