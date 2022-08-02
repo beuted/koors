@@ -27,6 +27,7 @@ function App() {
   const [nameNewItem, setNameNewItem] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showNewIngredientModal, setShowNewIngredientModal] = useState(false);
+  const [hasIngredientsToClean, setHasIngredientsToClean] = useState(false);
   const [deleteIngredientModal, setDeleteIngredientModal] = useState(false);
   const [showNewRecetteModal, setShowNewRecetteModal] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
@@ -49,7 +50,7 @@ function App() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const delayBetweenRefresh = 5000; //ms
-  
+
   let id = null; // setInverval Id
 
   let inputRef;
@@ -168,6 +169,8 @@ function App() {
   useEffect(() => {
     (async () => {
       if (items && Object.keys(items).length > 0) {
+        updateOrderedItemsKeysFromItems(items); // We update the ordered items
+
         try {
           const responseJson = await fetch("/api/state", {
             headers: {
@@ -184,16 +187,24 @@ function App() {
           console.error(err);
         }
 
-        var itemKeys = Object.keys(items);
-
-        // Sort alphabetically on name then on category
-        itemKeys.sort((i1, i2) => i1.toLowerCase() < i2.toLowerCase() ? 1 : -1);
-        // Defining a category for manually added item just for sorting
-        itemKeys.sort((i1, i2) => ((categoryMap[i1] ?? '000') < (categoryMap[i2] ?? '000')) ? 1 : -1);
-        setOrderedItems(itemKeys);
       }
     })();
   }, [items])
+
+  function updateOrderedItemsKeysFromItems(items) {
+    var itemKeys = Object.keys(items);
+
+    // Check if there is anything to clean
+    setHasIngredientsToClean(itemKeys.findIndex(key => items[key].count == 0 || items[key].checked) != -1);
+
+    // Sort alphabetically on name then on category
+    itemKeys.sort((i1, i2) => i1.toLowerCase() < i2.toLowerCase() ? 1 : -1);
+
+    // Defining a category for manually added item just for sorting
+    itemKeys.sort((i1, i2) => ((categoryMap[i1] ?? '000') < (categoryMap[i2] ?? '000')) ? 1 : -1);
+
+    setOrderedItems(itemKeys);
+  }
 
 
   useEffect(() => {
@@ -249,7 +260,6 @@ function App() {
       newItems[nameNewItem].count += 1;
 
     // Clear input
-
     setItems(newItems);
     setNameNewItem("");
 
@@ -266,11 +276,19 @@ function App() {
     return copyToClipboardPrivate(text);
   }
 
-  async function reset() {
+  async function clean() {
+    var newItems = Object.assign({}, items);
 
-    setItems({});
-    setOrderedItems([]);
+    // Remove checked items and items at 0
+    for (var item of Object.entries(newItems)) {
+      if (item[1].count == 0 || item[1].checked) {
+        delete newItems[item[0]]
+      }
+    };
 
+    setItems(newItems);
+
+    // Hacky way to force the refresh of the items since setItems is skipped if items is empty
     try {
       const responseJson = await fetch("/api/state", {
         headers: {
@@ -280,12 +298,14 @@ function App() {
           'user': user
         },
         method: "POST",
-        body: JSON.stringify({})
+        body: JSON.stringify(newItems)
       });
       const response = await responseJson.text();
     } catch (err) {
       console.error(err);
     }
+
+    updateOrderedItemsKeysFromItems(newItems)
   }
 
   function exportToGKeep() {
@@ -546,7 +566,7 @@ function App() {
 
     const success = await testPassword();
     if (!success)
-      setShowAdmin(true);    
+      setShowAdmin(true);
   }
 
   function disconnect() {
@@ -599,7 +619,7 @@ function App() {
               value={nameNewItem}
               freeSolo
               renderInput={(params) => (
-                <TextField {...params} label="nouvel ingredient" variant="standard" inputRef={input => { inputRef = input; }} />
+                <TextField {...params} label="nouvel ingredient" variant="standard" inputRef={input => { inputRef = input; }} onChange={(event) => { console.log(event.target.value); setNameNewItem(event.target.value); }} />
               )}
             />
             <button className="actionButton" disabled={!nameNewItem} onClick={() => createNewItem()}>Add</button>
@@ -607,7 +627,7 @@ function App() {
         </div>
 
         <div className="actions">
-          <button className="actionButton" onClick={() => reset()}>🗑️ reset</button>
+          <button className="actionButton" onClick={() => clean()} disabled={!hasIngredientsToClean}>🗑️ clean</button>
           <button className="actionButton" onClick={() => copyToClipBoard()}>📋 copy</button>
           <button className="actionButton" onClick={() => exportToGKeep()}>📝 google keep</button>
           {adminValidated ? (<button className="actionButton" onClick={() => setShowNewIngredientModal(!showNewIngredientModal)}>Nouvel ingredient</button>) : null}
@@ -677,7 +697,7 @@ function App() {
             value={nameNewIngredient}
             renderInput={(params) => (
               <TextField {...params} label="Ingredient" variant="standard" />
-            )}/>
+            )} />
 
           <div className="modal-actions">
             <button className="actionButton" onClick={() => setDeleteIngredientModal(false)}>Annuler</button>
