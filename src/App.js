@@ -445,12 +445,13 @@ function App() {
   }
 
   async function addNewIngredient() {
-    if (categoryMap[nameNewIngredient]) return;
+    const nameNewIngredientCleaned = nameNewIngredient.toLowerCase().trim();
+    if (categoryMap[nameNewIngredientCleaned]) return;
 
-    categoryMap[nameNewIngredient] = categoryNewIngredient;
+    categoryMap[nameNewIngredientCleaned] = categoryNewIngredient;
 
     if (confirmNewIngredient == "true")
-      ingredientsToValidate.push(nameNewIngredient);
+      ingredientsToValidate.push(nameNewIngredientCleaned);
 
     // Update server
     try {
