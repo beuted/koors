@@ -9,11 +9,9 @@ import {
   defaultIngredientsToValidate,
 } from "./default-values";
 
-// Dusclaimer: I know there are race conditions in this files but I don't care
+// Disclaimer: I know there are race conditions in this files but I don't care
 
-//const passwordHash256 =
-//  "0e01dc2e19ec47028590353b9d8f86f556dde380ad0b7c4cd063e31c1faa1b8b";
-
+require("source-map-support").install(); // Typescript source maps
 process.on("unhandledRejection", console.error); // Better logging in promises
 process.setMaxListeners(0); // Mem leak erros
 
@@ -206,27 +204,25 @@ async function Init() {
   app.post("/api/state/", async (req, res) => {
     const user = req.headers["user"];
 
-    const value: boolean = req.body;
-    await storage.setItem("state-" + user, value);
-    res.status(200).send();
-  });
+    let currState = await storage.getItem("state-" + user);
+    if (!currState) currState = {};
 
-  // Public
-  // TODO that would be cleaner to use this to avoid conflict when 2 user use the app at the same time
-  app.post("/api/state/add/:name", async (req, res) => {
-    const user = req.headers["user"];
+    let newState: any = req.body;
+    if (!newState) newState = {};
 
-    const name: string = encodeURIComponent(req.params.name);
-    const value: { count: number; checked: boolean } = req.body;
-
-    const state = await storage.getItem("state-" + user);
-    if (state[name]) {
-      state[name].count += value.count;
-      state[name].checked = value.checked;
-    } else {
-      state[name] = { count: value.count, checked: value.checked };
+    // Rollback if we are late with this update compare to what we have in state
+    // DISCLAIMER: this will break if client clock is not sync
+    for (let itemKey of Object.keys(currState)) {
+      if (
+        newState[itemKey] &&
+        newState[itemKey].updateTime &&
+        currState[itemKey].updateTime &&
+        currState[itemKey].updateTime > newState[itemKey].updateTime
+      )
+        newState[itemKey] = currState[itemKey];
     }
-    await storage.setItem("state", value);
+
+    await storage.setItem("state-" + user, newState);
     res.status(200).send();
   });
 

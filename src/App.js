@@ -7,15 +7,12 @@ import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
-import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import Divider from "@mui/material/Divider";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
 import Button from "@mui/material/Button";
 
 function App() {
@@ -127,7 +124,24 @@ function App() {
 
       // Hacky way to avoid setting item (and triggering hooks) every time the state is fetched
       if (response && JSON.stringify(response) != JSON.stringify(items)) {
-        setItems(response);
+        setItems((items) => {
+          // Rollback if response from server is already old
+          for (let itemKey of Object.keys(items)) {
+            if (
+              response[itemKey] &&
+              response[itemKey].updateTime &&
+              items[itemKey].updateTime &&
+              response[itemKey].updateTime < items[itemKey].updateTime
+            ) {
+              console.log(
+                `Rollback ${itemKey} to ${JSON.stringify(items[itemKey])}`
+              );
+              response[itemKey] = items[itemKey];
+            }
+          }
+
+          return response;
+        });
       }
     } catch (err) {
       console.error(err);
@@ -169,22 +183,6 @@ function App() {
     (async () => {
       if (items && Object.keys(items).length > 0) {
         updateOrderedItemsKeysFromItems(items); // We update the ordered items
-
-        try {
-          const responseJson = await fetch("/api/state", {
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-              auth: hashedPassword,
-              user: user,
-            },
-            method: "POST",
-            body: JSON.stringify(items),
-          });
-          const response = await responseJson.text();
-        } catch (err) {
-          console.error(err);
-        }
       }
     })();
   }, [items]);
@@ -229,27 +227,42 @@ function App() {
       );
 
     for (var item of Object.entries(recette.ingredients)) {
-      if (!newItems[item[0]])
-        newItems[item[0]] = { count: item[1], checked: false };
-      else newItems[item[0]].count += item[1];
+      if (!newItems[item[0]]) {
+        newItems[item[0]] = {
+          count: item[1],
+          checked: false,
+          updateTime: Date.now(),
+        };
+      } else {
+        newItems[item[0]].count += item[1];
+        newItems[item[0]].updateTime = Date.now();
+      }
     }
 
-    setItems(newItems);
+    updateItems(newItems);
   }
 
-  function decreaseItem(itemName, evt) {
+  function decreaseItem(itemKey, evt) {
     var newItems = Object.assign({}, items);
-    if (newItems[itemName].count == 0) return;
-    newItems[itemName].count--;
-    setItems(newItems);
+    if (newItems[itemKey].count == 0) {
+      evt.stopPropagation();
+      return;
+    }
+    newItems[itemKey].count--;
+    if (newItems[itemKey].count == 0) newItems[itemKey].checked = true;
+    newItems[itemKey].updateTime = Date.now();
+
+    updateItems(newItems);
     evt.stopPropagation();
   }
 
-  function increaseItem(itemName, evt) {
+  function increaseItem(itemKey, evt) {
     var newItems = Object.assign({}, items);
-    newItems[itemName].count++;
+    newItems[itemKey].count++;
+    newItems[itemKey].checked = false;
+    newItems[itemKey].updateTime = Date.now();
 
-    setItems(newItems);
+    updateItems(newItems);
     evt.stopPropagation();
   }
 
@@ -257,12 +270,19 @@ function App() {
     if (!nameNewItem) return;
 
     var newItems = Object.assign({}, items);
-    if (!newItems[nameNewItem])
-      newItems[nameNewItem] = { count: 1, checked: false };
-    else newItems[nameNewItem].count += 1;
+    if (!newItems[nameNewItem]) {
+      newItems[nameNewItem] = {
+        count: 1,
+        checked: false,
+        updateTime: Date.now(),
+      };
+    } else {
+      newItems[nameNewItem].count += 1;
+      newItems[nameNewItem].updateTime = Date.now();
+    }
 
     // Clear input
-    setItems(newItems);
+    updateItems(newItems);
     setNameNewItem("");
 
     // Focus input
@@ -287,7 +307,7 @@ function App() {
       }
     }
 
-    setItems(newItems);
+    updateItems(newItems); // TODO could be more incremental
 
     // Hacky way to force the refresh of the items since setItems is skipped if items is empty
     try {
@@ -325,7 +345,7 @@ function App() {
     var newItems = Object.assign({}, items);
     delete newItems[itemKey];
 
-    setItems(newItems);
+    updateItems(newItems);
     var newItemsToValide = itemsToValidate.filter((x) => x !== itemKey);
     setItemsToValidate(newItemsToValide);
   }
@@ -338,6 +358,28 @@ function App() {
   function checkItem(itemKey) {
     var newItems = Object.assign({}, items);
     newItems[itemKey].checked = !newItems[itemKey].checked;
+    newItems[itemKey].updateTime = Date.now();
+
+    updateItems(newItems);
+  }
+
+  function updateItems(newItems) {
+    //TODO: Batch events would be better performance wise
+    try {
+      // Fire dans forget
+      fetch("/api/state", {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          auth: hashedPassword,
+          user: user,
+        },
+        method: "POST",
+        body: JSON.stringify(newItems),
+      });
+    } catch (err) {
+      console.error(err);
+    }
 
     setItems(newItems);
   }
@@ -693,7 +735,6 @@ function App() {
                     inputRef = input;
                   }}
                   onChange={(event) => {
-                    console.log(event.target.value);
                     setNameNewItem(event.target.value);
                   }}
                 />
