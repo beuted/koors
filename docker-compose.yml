@@ -1,0 +1,30 @@
+version: "3"
+
+services:
+
+  nginx:
+    container_name: nginx_babbel
+    image: nginx
+    restart: unless-stopped
+    networks:
+      - web
+    volumes:
+      - ./dist:/etc/nginx/html
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    labels:
+      - traefik.enable=true
+      - traefik.backend=nginx_babbel
+      - traefik.docker.network=web
+      # Port
+      - traefik.http.services.nginx_babbel.loadBalancer.server.port=80
+
+      # Rule
+      - traefik.http.routers.nginx_babbel.rule=Host(`babbel.jehanno.net`)
+      # SSL configuration
+      - traefik.http.routers.nginx_babbel.entryPoints=websecure
+      - traefik.http.routers.nginx_babbel.tls=true
+      - traefik.http.routers.nginx_babbel.tls.certResolver=myresolver
+
+networks:
+  web:
+    external: true
