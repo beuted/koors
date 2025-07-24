@@ -17,7 +17,7 @@ services:
       - ./back/persist-save:/app/persist-save
 
   nginx:
-    container_name: nginx_babbel
+    container_name: nginx_koors
     image: nginx
     restart: unless-stopped
     networks:
@@ -30,17 +30,17 @@ services:
       - backend
     labels:
       - traefik.enable=true
-      - traefik.backend=nginx_babbel
+      - traefik.backend=nginx_koors
       - traefik.docker.network=web
       # Port
-      - traefik.http.services.nginx_babbel.loadBalancer.server.port=80
+      - traefik.http.services.nginx_koors.loadBalancer.server.port=80
 
       # Rule
-      - traefik.http.routers.nginx_babbel.rule=Host(`babbel.jehanno.net`)
+      - traefik.http.routers.nginx_koors.rule=Host(`koors2.jehanno.net`)
       # SSL configuration
-      - traefik.http.routers.nginx_babbel.entryPoints=websecure
-      - traefik.http.routers.nginx_babbel.tls=true
-      - traefik.http.routers.nginx_babbel.tls.certResolver=myresolver
+      - traefik.http.routers.nginx_koors.entryPoints=websecure
+      - traefik.http.routers.nginx_koors.tls=true
+      - traefik.http.routers.nginx_koors.tls.certResolver=myresolver
 
 networks:
   web:
