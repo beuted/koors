@@ -34,7 +34,7 @@ services:
       - traefik.http.services.nginx_koors.loadBalancer.server.port=80
 
       # Rule
-      - traefik.http.routers.nginx_koors.rule=Host(`koors-test.jehanno.net`)
+      - traefik.http.routers.nginx_koors.rule=Host(`koors.jehanno.net`)
       # SSL configuration
       - traefik.http.routers.nginx_koors.entryPoints=websecure
       - traefik.http.routers.nginx_koors.tls=true
