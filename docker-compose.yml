@@ -9,7 +9,6 @@ services:
     restart: unless-stopped
     networks:
       - web
-      - internal
     environment:
       - PORT=4000
     volumes:
@@ -22,7 +21,6 @@ services:
     restart: unless-stopped
     networks:
       - web
-      - internal
     volumes:
       - ./build:/etc/nginx/html
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
@@ -45,5 +43,3 @@ services:
 networks:
   web:
     external: true
-  internal:
-    driver: bridge
