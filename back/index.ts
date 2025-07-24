@@ -31,9 +31,6 @@ async function Init() {
     logging: false, // can also be custom logging function
   });
 
-  // Serve client files
-  app.use(express.static("../build"));
-
   const server = app.listen(port, () => {
     console.log(
       `${new Date().toISOString()}: Koors is running at localhost: ${port}`
