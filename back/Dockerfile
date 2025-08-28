@@ -14,8 +14,8 @@ COPY . .
 # Build TypeScript to JavaScript
 RUN npm run build
 
-# Create persist directory
-RUN mkdir -p persist persist-save
+# Create data directory for SQLite database
+RUN mkdir -p data
 
 # Expose port
 EXPOSE 4000

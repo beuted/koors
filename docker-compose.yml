@@ -12,8 +12,7 @@ services:
     environment:
       - PORT=4000
     volumes:
-      - ./back/persist:/app/persist
-      - ./back/persist-save:/app/persist-save
+      - ./back/data:/app/data
 
   nginx:
     container_name: nginx_koors

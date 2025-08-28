@@ -11,6 +11,9 @@
 # production
 /build
 
+#sqllite3
+back/data/koors.db
+
 # misc
 .DS_Store
 .env.local

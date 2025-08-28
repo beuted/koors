@@ -1,8 +1,7 @@
 import * as express from "express";
 import * as http from "http";
-import * as storage from "node-persist";
-import * as crypto from "crypto";
 import * as path from "path";
+import { DatabaseService } from "./database";
 import {
   defaultRecettes,
   defaultCategoryMap,
@@ -23,13 +22,8 @@ async function Init() {
 
   const port = process.env["PORT"] || 4000;
 
-  await storage.init({
-    dir: "./persist",
-    stringify: JSON.stringify,
-    parse: JSON.parse,
-    encoding: "utf8",
-    logging: false, // can also be custom logging function
-  });
+  // Initialize SQLite database
+  const storage = new DatabaseService("./data/koors.db");
 
   const server = app.listen(port, () => {
     console.log(
@@ -66,48 +60,45 @@ async function Init() {
     const auth = req.headers["auth"];
     const user = req.headers["user"];
 
-    let users: { [key: string]: string } = {};
-    try {
-      users = await storage.getItem("users");
-    } catch (err) {
-      // if it's the first user, create the file
-      try {
-        await storage.setItem("users", {});
-      } catch (err) {
-        console.log("Unexpected error during register", err);
-        res.status(500).send();
-        return;
-      }
-    }
-
-    if (!users) users = {};
-
-    // if the user already exist
-    if (typeof user != "string" || !!users[user]) {
-      res.status(400).send(`user ${user} already exist`);
+    if (typeof user !== "string" || typeof auth !== "string") {
+      res.status(400).send("Invalid user or auth headers");
       return;
     }
 
-    users[user] = auth as string;
+    try {
+      // Check if user already exists
+      const existingUser = await storage.getUser(user);
+      if (existingUser) {
+        res.status(400).send(`user ${user} already exist`);
+        return;
+      }
 
-    await storage.setItem("users", users);
+      // Create new user
+      await storage.createUser(user, auth);
 
-    // Default values
-    await storage.setItem("recettes-" + user, defaultRecettes);
-    await storage.setItem(
-      "ingredientsToValidate-" + user,
-      defaultIngredientsToValidate
-    );
-    await storage.setItem("categoryMap-" + user, defaultCategoryMap);
+      // Set default values for the new user
+      await storage.setRecipes(user, defaultRecettes);
+      await storage.setIngredientsToValidate(
+        user,
+        defaultIngredientsToValidate
+      );
+      await storage.setCategoryMap(user, defaultCategoryMap);
 
-    res.status(200).send();
-    return;
+      res.status(200).send();
+    } catch (err) {
+      console.log("Unexpected error during register", err);
+      res.status(500).send();
+    }
   });
 
   // Public
   app.get("/api/recettes", async (req, res) => {
     const user = req.headers["user"];
-    const recettes = await storage.getItem("recettes-" + user);
+    if (typeof user !== "string") {
+      res.status(400).send("Invalid user header");
+      return;
+    }
+    const recettes = await storage.getRecipes(user);
     res.status(200).send(recettes || []);
   });
 
@@ -124,7 +115,7 @@ async function Init() {
     console.log("Update recettes");
 
     const value: any = req.body;
-    await storage.setItem("recettes-" + user, value);
+    await storage.setRecipes(user as string, value);
     res.status(200).send();
   });
 
@@ -141,14 +132,7 @@ async function Init() {
     const name: string = req.params.name;
     console.log("Delete recette", name);
 
-    let recettes = await storage.getItem("recettes-" + user);
-
-    const deleteIndex = recettes.findIndex((x: any) => x.name == name);
-
-    if (deleteIndex != -1) recettes.splice(deleteIndex, 1);
-    else console.log("Recette not found", name);
-
-    await storage.setItem("recettes-" + user, recettes);
+    await storage.deleteRecipe(user as string, name);
 
     res.status(200).send();
   });
@@ -157,10 +141,10 @@ async function Init() {
   app.get("/api/ingredients", async (req, res) => {
     const user = req.headers["user"];
 
-    const ingredientsToValidate = await storage.getItem(
-      "ingredientsToValidate-" + user
+    const ingredientsToValidate = await storage.getIngredientsToValidate(
+      user as string
     );
-    const categoryMap = await storage.getItem("categoryMap-" + user);
+    const categoryMap = await storage.getCategoryMap(user as string);
 
     res.status(200).send({
       ingredientsToValidate: ingredientsToValidate || [],
@@ -181,11 +165,11 @@ async function Init() {
     console.log("Update ingredients");
 
     const value: { ingredientsToValidate: any; categoryMap: any } = req.body;
-    await storage.setItem(
-      "ingredientsToValidate-" + user,
+    await storage.setIngredientsToValidate(
+      user as string,
       value.ingredientsToValidate
     );
-    await storage.setItem("categoryMap-" + user, value.categoryMap);
+    await storage.setCategoryMap(user as string, value.categoryMap);
     res.status(200).send();
   });
 
@@ -193,7 +177,7 @@ async function Init() {
   app.get("/api/state/", async (req, res) => {
     const user = req.headers["user"];
 
-    const state = await storage.getItem("state-" + user);
+    const state = await storage.getUserState(user as string);
     res.status(200).send(state || {});
   });
 
@@ -201,7 +185,7 @@ async function Init() {
   app.post("/api/state/", async (req, res) => {
     const user = req.headers["user"];
 
-    let currState = await storage.getItem("state-" + user);
+    let currState = await storage.getUserState(user as string);
     if (!currState) currState = {};
 
     let newState: any = req.body;
@@ -219,13 +203,8 @@ async function Init() {
         newState[itemKey] = currState[itemKey];
     }
 
-    await storage.setItem("state-" + user, newState);
+    await storage.setUserState(user as string, newState);
     res.status(200).send();
-  });
-
-  // Any request that didn't match an API return index.html
-  app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "..", "build", "index.html"));
   });
 
   async function isAuthenticated(
@@ -236,7 +215,7 @@ async function Init() {
       return false;
     }
 
-    const users = await storage.getItem("users");
+    const users = await storage.getAllUsers();
     const passwordHash256 = users[user];
 
     if (hash != passwordHash256) return false;
