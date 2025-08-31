@@ -623,62 +623,47 @@ function App() {
       <div className="container">
         <div className="title">Koors</div>
 
-        <div className="sub-title">Recettes</div>
-        <div className="recettes">
-          {recettes.map((recette, i) => (
-            <div
-              key={i}
-              className={
-                "recette" +
-                (recette.type == "singleItem" ? " singleItem" : "") +
-                (recette.type == "dessert" ? " dessert" : "") +
-                (recette.type == "flemme" ? " flemme" : "")
-              }
-              onClick={() => addItems(recette.name)}
-            >
-              <div className="recette-title">{recette.name}</div>
-              <div className="recette-nb-personnes">
-                {recette.personnes ? recette.personnes + "🙋‍♂️" : ""}
-              </div>
-              <div className="recette-link">
-                {recette.link ? (
-                  <a
-                    href={recette.link}
-                    target="_blank"
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    🔗
-                  </a>
-                ) : null}
-              </div>
-              <div className="recette-delete">
-                {adminValidated ? (
-                  <IconButton
-                    aria-label="delete"
-                    size="small"
-                    onClick={(event) => {
-                      deleteRecette(recette.name);
-                      event.stopPropagation();
-                    }}
-                  >
-                    <DeleteIcon fontSize="inherit" />
-                  </IconButton>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
-
         <div className="sub-title">Courses</div>
         <div className="list">
+          <div className="item">
+            <Autocomplete
+              className="itemNameField"
+              options={Object.keys(categoryMap)}
+              onChange={(e, value) => {
+                setNameNewItem(value);
+              }}
+              value={nameNewItem}
+              freeSolo
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="nouvel ingredient"
+                  variant="standard"
+                  inputRef={(input) => {
+                    inputRef = input;
+                  }}
+                  onChange={(event) => {
+                    setNameNewItem(event.target.value);
+                  }}
+                />
+              )}
+            />
+            <button
+              className="actionButton"
+              disabled={!nameNewItem}
+              onClick={() => createNewItem()}
+            >
+              Add
+            </button>
+          </div>
           {orderedItems.map((itemKey, i) => (
             <div
               key={i}
               className={
                 "item " +
                 (!items[itemKey] ||
-                items[itemKey].count <= 0 ||
-                items[itemKey].checked
+                  items[itemKey].count <= 0 ||
+                  items[itemKey].checked
                   ? "noItem"
                   : "")
               }
@@ -716,38 +701,6 @@ function App() {
               </div>
             </div>
           ))}
-
-          <div className="item">
-            <Autocomplete
-              className="itemNameField"
-              options={Object.keys(categoryMap)}
-              onChange={(e, value) => {
-                setNameNewItem(value);
-              }}
-              value={nameNewItem}
-              freeSolo
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="nouvel ingredient"
-                  variant="standard"
-                  inputRef={(input) => {
-                    inputRef = input;
-                  }}
-                  onChange={(event) => {
-                    setNameNewItem(event.target.value);
-                  }}
-                />
-              )}
-            />
-            <button
-              className="actionButton"
-              disabled={!nameNewItem}
-              onClick={() => createNewItem()}
-            >
-              Add
-            </button>
-          </div>
         </div>
 
         <div className="actions">
@@ -798,6 +751,53 @@ function App() {
             Déconnection
           </button>
         </div>
+
+        <div className="sub-title">Recettes</div>
+        <div className="recettes">
+          {recettes.map((recette, i) => (
+            <div
+              key={i}
+              className={
+                "recette" +
+                (recette.type == "singleItem" ? " singleItem" : "") +
+                (recette.type == "dessert" ? " dessert" : "") +
+                (recette.type == "flemme" ? " flemme" : "")
+              }
+              onClick={() => addItems(recette.name)}
+            >
+              <div className="recette-title">{recette.name}</div>
+              <div className="recette-nb-personnes">
+                {recette.personnes ? recette.personnes + "🙋‍♂️" : ""}
+              </div>
+              <div className="recette-link">
+                {recette.link ? (
+                  <a
+                    href={recette.link}
+                    target="_blank"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    🔗
+                  </a>
+                ) : null}
+              </div>
+              <div className="recette-delete">
+                {adminValidated ? (
+                  <IconButton
+                    aria-label="delete"
+                    size="small"
+                    onClick={(event) => {
+                      deleteRecette(recette.name);
+                      event.stopPropagation();
+                    }}
+                  >
+                    <DeleteIcon fontSize="inherit" />
+                  </IconButton>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+
       </div>
 
       {showModal ? (
