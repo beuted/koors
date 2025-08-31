@@ -531,6 +531,7 @@ export let categories = {
   "apéro": "🍷",
   "ingredient-cuisine": "👨‍🍳",
   "cuisine-du-monde": "🍜",
+  "petit-dej": "🥣",
   "000-none": "❓"
 }
 
